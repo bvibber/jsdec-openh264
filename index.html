@@ -1,0 +1,66 @@
+<html>
+  <meta charset="utf-8">
+  <head><title>JavaScript decoders for HTML video element</title></head>
+  <body>
+    <p>See <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1165180">bug 1165180</a> for patches and details.</p>
+    <div>
+      <video id='v' width=320 height=240 controls></video>
+    </div>
+    <script src="h264-decoder.js"></script>
+    <script type="application/javascript">
+      var v = document.getElementById('v');
+      var width;
+      var height;
+      var decoder = new Module.H264Decoder();
+      v.registerVideoDataDecoder({
+        initVideo: function(frameWidth, frameHeight) {
+          decoder.initVideo(frameWidth, frameHeight);
+          width = frameWidth; height = frameHeight;
+        },
+        input: function(offset,time,timecode,duration,keyframe,discontinuity,buffer) {
+          var out = decoder.input(offset, time, timecode, duration, keyframe, discontinuity, buffer);
+          if (out.y.width) {
+            return out;
+          } else {
+            console.log('frame did not complete!');
+            var frame = new Uint8Array(width * height);
+            return {
+              width: width,
+              height: height,
+              y: { data: frame, stride: width, height: height, width: width, offset: 0, skip: 0 },
+              cb: { data: frame, stride: width / 2, height: height / 2, width: width / 2, offset: 0, skip: 0 },
+              cr: { data: frame, stride: width / 2, height: height / 2, width: width / 2, offset: 0, skip: 0 }
+            };
+          }
+        }
+      });
+      var frameSum = 0;
+      var rate;
+      var channels;
+      v.registerAudioDataDecoder({
+        initAudio: function(channelCount, sampleRate) {
+          channels = channelCount;
+          rate = sampleRate;
+        },
+        input: function(offset,time,timecode,duration,keyframe,discontinuity,buffer) {
+
+          var frames = Math.round((duration * rate) / 1000000);
+          var samples = new Float64Array(frames * channels);
+          // Fill the sound buffer with an A4 tone.
+          var pi = 3.14159265;
+          var noteHz = 440.0;
+          for (var i = 0; i < frames; i++) {
+            var f = Math.sin(2 * pi * noteHz * frameSum / rate);
+            for (var c = 0; c < channels; c++) {
+              samples[i * channels + c] = f;
+            }
+            frameSum++;
+          }
+          return samples;
+        }
+      });
+      v.src = 'test.mp4';
+    </script>
+
+  </body>
+</html>
