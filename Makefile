@@ -4,7 +4,7 @@ all : h264-decoder.js
 
 clean :
 	rm -f h264-decoder.js
-	cd openh264 && emmake make clean OS=emscripten ARCH=asmjs
+	cd openh264 && emmake make clean OS=linux ARCH=asmjs
 
 h264-decoder.js : h264-decoder.cpp openh264/libopenh264.so
 	emcc \
