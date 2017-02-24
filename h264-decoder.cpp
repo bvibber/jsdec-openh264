@@ -111,7 +111,7 @@ void H264Decoder::initVideo(int frameWidth, int frameHeight)
 	mHeight = frameHeight;
 
     SDecodingParam s = {0};
-    s.eOutputColorFormat = videoFormatI420;
+    //s.eOutputColorFormat = videoFormatI420;
     s.uiTargetDqLayer = (uint8_t) - 1;
     s.sVideoProperty.eVideoBsType = VIDEO_BITSTREAM_SVC;
 
